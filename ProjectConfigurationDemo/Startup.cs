@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using ProjectConfigurationDemo.ConfigurationValidation;
 using ProjectConfigurationDemo.Models;
 using ProjectConfigurationDemo.Services;
 
@@ -27,42 +29,56 @@ namespace ProjectConfigurationDemo
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			//services.Configure<TitleConfiguration>(Configuration.GetSection("Pages:HomePage"));
+			services.Configure<TitleConfiguration>(Configuration.GetSection("Pages:HomePage"));
 
-			services.Configure<TitleConfiguration>("HomePage", Configuration.GetSection("Pages:HomePage"));
-			services.Configure<TitleConfiguration>("ProductPage", Configuration.GetSection("Pages:ProductPage"));
+			services.TryAddSingleton<IValidateOptions<TitleConfiguration>, TitleConfigurationValidation>();
+
+			//named options configuration
+			//services.Configure<TitleConfiguration>("HomePage", Configuration.GetSection("Pages:HomePage"));
+			//services.Configure<TitleConfiguration>("ProductPage", Configuration.GetSection("Pages:ProductPage"));
+
+			//annonymous delegate validation
+			//services.AddOptions<TitleConfiguration>()
+			//	.Bind(Configuration.GetSection("Pages:HomePage"))
+			//	.Validate(config =>
+			//	{
+			//		if (string.IsNullOrEmpty(config.WelcomeMessage)|| config.WelcomeMessage.Length > 60)
+			//			return false;
+
+			//		return true;
+			//	}, "Welcome message must be defined and it must be less than 60 characters long.");
 
 			services.TryAddSingleton<ITitleColorService, TitleColorService>();
 
 			services.AddControllersWithViews();
 		}
 
-		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+	{
+		if (env.IsDevelopment())
 		{
-			if (env.IsDevelopment())
-			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler("/Home/Error");
-				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-				app.UseHsts();
-			}
-			app.UseHttpsRedirection();
-			app.UseStaticFiles();
-
-			app.UseRouting();
-
-			app.UseAuthorization();
-
-			app.UseEndpoints(endpoints =>
-			{
-				endpoints.MapControllerRoute(
-					name: "default",
-					pattern: "{controller=Home}/{action=Index}/{id?}");
-			});
+			app.UseDeveloperExceptionPage();
 		}
+		else
+		{
+			app.UseExceptionHandler("/Home/Error");
+			// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+			app.UseHsts();
+		}
+		app.UseHttpsRedirection();
+		app.UseStaticFiles();
+
+		app.UseRouting();
+
+		app.UseAuthorization();
+
+		app.UseEndpoints(endpoints =>
+		{
+			endpoints.MapControllerRoute(
+				name: "default",
+				pattern: "{controller=Home}/{action=Index}/{id?}");
+		});
 	}
+}
 }
