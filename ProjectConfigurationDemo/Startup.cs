@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -29,24 +25,12 @@ namespace ProjectConfigurationDemo
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddDbContext<ConfigurationDbContext>(opts =>
+					opts.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
+
 			services.Configure<TitleConfiguration>(Configuration.GetSection("Pages:HomePage"));
 
 			services.TryAddSingleton<IValidateOptions<TitleConfiguration>, TitleConfigurationValidation>();
-
-			//named options configuration
-			//services.Configure<TitleConfiguration>("HomePage", Configuration.GetSection("Pages:HomePage"));
-			//services.Configure<TitleConfiguration>("ProductPage", Configuration.GetSection("Pages:ProductPage"));
-
-			//annonymous delegate validation
-			//services.AddOptions<TitleConfiguration>()
-			//	.Bind(Configuration.GetSection("Pages:HomePage"))
-			//	.Validate(config =>
-			//	{
-			//		if (string.IsNullOrEmpty(config.WelcomeMessage)|| config.WelcomeMessage.Length > 60)
-			//			return false;
-
-			//		return true;
-			//	}, "Welcome message must be defined and it must be less than 60 characters long.");
 
 			services.TryAddSingleton<ITitleColorService, TitleColorService>();
 

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using ProjectConfigurationDemo.Models.ConfigurationProviders;
 
 namespace ProjectConfigurationDemo
 {
@@ -21,6 +23,15 @@ namespace ProjectConfigurationDemo
 				.ConfigureWebHostDefaults(webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
+				})
+				.ConfigureAppConfiguration((hostingContext, configBuilder) =>
+				{
+					var config = configBuilder.Build();
+
+					var configSource = new EFConfigurationSource(opts =>
+						opts.UseSqlServer(config.GetConnectionString("sqlConnection")));
+
+					configBuilder.Add(configSource);
 				});
 	}
 }
